@@ -81,6 +81,14 @@ func (r *MariaDBDatabaseReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	// Adopted database will not be created or deleted.
+	if instance.ObjectMeta.Labels["adopted"] == "true" {
+		if err := r.setCompleted(ctx, instance); err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
 	// Fetch the MariaDB instance from which we'll pull the credentials
 	db := &databasev1beta1.MariaDB{
 		ObjectMeta: metav1.ObjectMeta{
